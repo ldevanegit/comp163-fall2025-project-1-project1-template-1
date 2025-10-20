@@ -1,0 +1,31 @@
+name: GitHub Classroom Workflow
+
+on: [push, pull_request]
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  build:
+    name: Autograding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+      
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short
+      
+      - uses: education/autograding@v1
