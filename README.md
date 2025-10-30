@@ -1,97 +1,204 @@
-# COMP 163 - Project 1: Character Creator & Chronicles
-# 🎯 Project Overview
-
-Build a text-based RPG character creation and story progression system that demonstrates mastery of functions and file I/O operations.
-
-# Required Functions 
-Complete these functions in project1_starter.py:
-
-create_character(name, character_class) - Create new character
-
-calculate_stats(character_class, level) - Calculate character stats
-
-save_character(character, filename) - Save character to file
-
-load_character(filename) - Load character from file
-
-display_character(character) - Display character info
-
-level_up(character) - Increase character level
-
-# 🎭 Character Classes
-Implement these character classes with unique stat distributions:
+"""
+COMP 163 - Project 1: Character Creator & Saving/Loading
+Name: Lemanuel Devane
 
 
-Warrior: High strength, low magic, high health
+AI Usage: ChatGPT (GPT-5) helped with organization, finding syntax errors as well as creating dictionary for loading characters and developing code for main program in case a file with information was not given.
+"""
 
-Mage: Low strength, high magic, medium health
+import random
+import os  
 
-Rogue: Medium strength, medium magic, low health
+#calculate_stats function
+def calculate_stats(role, level):
+    """
+    Calculates base stats based on role and level.
+    Each level adds +5 to all stats.
+    """
+    base_stats = {
+        "Assassin":  (15, 8, 70),
+        "Healer":    (7, 15, 90),
+        "Tank":      (12, 10, 110),
+        "Assault":   (10, 10, 100),
+        "Unclassified": (20, 20, 150)
+    }
 
-Cleric: Medium strength, high magic, high health
+    if role in base_stats:
+        strength, magic, health = base_stats[role]
+    else:
+        strength, magic, health = (10, 10, 100)
 
-# 📁 Required File Format
-Your save_character() function must create files in this exact format:
+    # Add +5 to each stat for every level up
+    strength += (level - 1) * 5
+    magic += (level - 1) * 5
+    health += (level - 1) * 5
 
-Character Name: [name]
-
-Class: [class]
-
-Level: [level]
-
-Strength: [strength]
-
-Magic: [magic]
-
-Health: [health]
-
-Gold: [gold]
+    return strength, magic, health
 
 
-# Run specific test file
-python -m pytest tests/test_character_creation.py -v
+#create_character function
+def create_character(name):
+    """
+    Creates a character with a random role and type.
+    Returns: character dictionary
+    """
+    roles = ["Assassin", "Healer", "Tank", "Assault", "Unclassified"]
 
-# Test your main program
-python project1_starter.py
+    # assigns random role to character
+    index = random.randint(0, len(roles)-1)
+    role = roles[index]  
 
-GitHub Testing:
+    #assigns your character type based on your role
+    if role in ["Assassin", "Assault"]:
+        type_ = "Striker"
+    elif role == "Tank":
+        type_ = "Vanguard"
+    elif role == "Healer":
+        type_ = "Support"
+    else:
+        type_ = "Special"
+    
+    level = 1
+    strength, magic, health = calculate_stats(role, level)
 
-After pushing your code, check the Actions tab to see automated test results:
+    character = {
+        "name": name,
+        "role": role,
+        "type": type_,
+        "level": level,
+        "strength": strength,
+        "magic": magic,
+        "health": health,
+        "gold": 100
+    }
 
-✅ Green checkmarks = tests passed
-❌ Red X's = tests failed (click to see details)
+    return character
 
-# ⚠️ Important Notes
-Protected Files
 
-DO NOT MODIFY files in the tests/ directory
+#display_character function
+def display_character(character):
+    """Prints formatted character sheet."""
+    print("\n=== CHARACTER SHEET ===")
+    print(f"Name: {character['name']}")
+    print(f"Role: {character['role']}")
+    print(f"Type: {character['type']}")
+    print(f"Level: {character['level']}")
+    print(f"Strength: {character['strength']}")
+    print(f"Magic: {character['magic']}")
+    print(f"Health: {character['health']}")
+    print(f"Gold: {character['gold']}")
+    print("\n")
 
-DO NOT MODIFY files in the .github/ directory
+#save_character funct
+def save_character(character, filename):
+    """
+    Saves the character to a text file.
+    Returns True if successful, False if filename is empty.
+    """
+    if filename == "":
+        print("No filename entered. Character not saved.")
+        return False
+    else:
+        file = open(filename, "w")
+        file.write(f"Character Name: {character['name']}\n")
+        file.write(f"Role: {character['role']}\n")
+        file.write(f"Type: {character['type']}\n")
+        file.write(f"Level: {character['level']}\n")
+        file.write(f"Strength: {character['strength']}\n")
+        file.write(f"Magic: {character['magic']}\n")
+        file.write(f"Health: {character['health']}\n")
+        file.write(f"Gold: {character['gold']}\n")
+        file.close()
+        return True
 
-Modifying protected files will result in automatic academic integrity violation
+# load_character function
+def load_character(filename):
+    """
+    Loads character from text file.
+    Returns character dictionary if file exists, None otherwise.
+    """
+    if not os.path.exists(filename):
+        print("File not found. Please check the name and try again.")
+        return None
+    else:
+        file = open(filename, "r")
+        lines = file.readlines()
+        file.close()
 
-# AI Usage Policy
+        data = {}
+        for line in lines:
+            parts = line.strip().split(": ")
+            if len(parts) == 2:
+                key = parts[0]
+                value = parts[1]
+                data[key] = value
 
-✅ Allowed: AI assistance for implementation, debugging, learning
+        character = {
+            "name": data["Character Name"],
+            "role": data["Role"],
+            "type": data["Type"],
+            "level": int(data["Level"]),
+            "strength": int(data["Strength"]),
+            "magic": int(data["Magic"]),
+            "health": int(data["Health"]),
+            "gold": int(data["Gold"])
+        }
+        return character
 
-📝 Required: Document AI usage in code comments
 
-🎯 Must be able to explain: Every line of code during interview
+# level_up function
+def level_up(character):
+    """Increases level and recalculates stats."""
+    character["level"] += 1
+    strength, magic, health = calculate_stats(character["role"], character["level"])
+    character["strength"] = strength
+    character["magic"] = magic
+    character["health"] = health
+    print(f"\n{character['name']} has leveled up to Level {character['level']}!\n")
 
-# 📝 Submission Checklist
 
- All required functions implemented
- 
- Code passes all automated tests
- 
- README updated with your documentation
- 
- Interview scheduled and completed
- 
- AI usage documented in code comments
 
-# 🏆 Grading
+# MAIN PROGRAM
+if __name__ == "__main__":
+    print("=== SOLO LEVELING CHARACTER CREATOR ===\n")
+    name = input("Enter your character's name: ")
 
-Implementation (70%): Function correctness, file operations, error handling
+    # Create character
+    char = create_character(name)
+    display_character(char)
 
-Interview (30%): Code explanation and live coding challenge
+    # Main loop
+    running = True
+    while running:
+        print("Options:")
+        print("1. Level Up")
+        print("2. Save Character")
+        print("3. Load Character")
+        print("4. Display Character")
+        print("5. Exit")
+        choice = input("Choose an option (1-5): ")
+
+        if choice == "1":
+            confirm = input("Level up? (y/n): ").lower()
+            if confirm == "y":
+                level_up(char)
+                display_character(char)
+        elif choice == "2":
+            filename = input("Enter filename to save (e.g., my_char.txt): ")
+            success = save_character(char, filename)
+            if success:
+                print("Character saved successfully!\n")
+        elif choice == "3":
+            filename = input("Enter filename to load: ")
+            loaded = load_character(filename)
+            if loaded is not None:
+                char = loaded
+                print("Character loaded!\n")
+                display_character(char)
+        elif choice == "4":
+            display_character(char)
+        elif choice == "5":
+            print("Goodbye, Hunter.")
+            running = False
+        else:
+            print("Invalid option. Try again.\n")
